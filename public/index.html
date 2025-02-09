@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        .timer-container {
+            font-size: 40px;
+            margin: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        button {
+            font-size: 20px;
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Countdown Timer</h1>
+    <div class="timer-container">
+        <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <button onclick="adjustTime('hours', 1)">▲</button>
+            <span>Hours</span>
+            <button onclick="adjustTime('hours', -1)">▼</button>
+        </div>
+        <div class="control-group">
+            <button onclick="adjustTime('minutes', 1)">▲</button>
+            <span>Minutes</span>
+            <button onclick="adjustTime('minutes', -1)">▼</button>
+        </div>
+    </div>
+    
+    <script>
+        let hours = 0, minutes = 0, seconds = 0;
+        let timerRunning = false;
+        let timer;
+
+        function adjustTime(unit, amount) {
+            if (unit === 'hours') {
+                hours = Math.max(0, hours + amount);
+            } else if (unit === 'minutes') {
+                minutes = Math.max(0, minutes + amount);
+            }
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById("hours").textContent = String(hours).padStart(2, '0');
+            document.getElementById("minutes").textContent = String(minutes).padStart(2, '0');
+            document.getElementById("seconds").textContent = String(seconds).padStart(2, '0');
+        }
+
+        function startTimer() {
+            if (!timerRunning) {
+                timerRunning = true;
+                timer = setInterval(() => {
+                    if (hours === 0 && minutes === 0 && seconds === 0) {
+                        seconds = -1; // Start going negative
+                    } else {
+                        if (seconds === 0) {
+                            if (minutes === 0) {
+                                if (hours > 0) {
+                                    hours--;
+                                    minutes = 59;
+                                    seconds = 59;
+                                }
+                            } else {
+                                minutes--;
+                                seconds = 59;
+                            }
+                        } else {
+                            seconds--;
+                        }
+                    }
+                    updateDisplay();
+                }, 1000);
+            }
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space") {
+                event.preventDefault();
+                startTimer();
+            }
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
