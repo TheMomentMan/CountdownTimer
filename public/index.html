@@ -7,17 +7,30 @@
     <style>
         body {
             text-align: center;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
         }
         .timer-container {
-            font-size: 40px;
-            margin: 20px;
+            font-size: 50px;
+            font-weight: bold;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
         }
         .controls {
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-top: 10px;
+            margin-bottom: 20px;
         }
         .control-group {
             display: flex;
@@ -25,62 +38,108 @@
             align-items: center;
         }
         button {
-            font-size: 20px;
-            padding: 5px 10px;
+            font-size: 18px;
+            padding: 10px 15px;
             margin: 5px;
             cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #reset-button {
+            margin-top: 20px;
+            background-color: #dc3545;
+        }
+        #reset-button:hover {
+            background-color: #a71d2a;
+        }
+        .negative {
+            color: red;
         }
     </style>
 </head>
 <body>
     <h1>Countdown Timer</h1>
     <div class="timer-container">
-        <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+        <span id="sign"></span><span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
     </div>
     
     <div class="controls">
         <div class="control-group">
-            <button onclick="adjustTime('hours', 1)">▲</button>
+            <button id="hours-up" onclick="adjustTime('hours', 1)">▲</button>
             <span>Hours</span>
-            <button onclick="adjustTime('hours', -1)">▼</button>
+            <button id="hours-down" onclick="adjustTime('hours', -1)">▼</button>
         </div>
         <div class="control-group">
-            <button onclick="adjustTime('minutes', 1)">▲</button>
+            <button id="minutes-up" onclick="adjustTime('minutes', 1)">▲</button>
             <span>Minutes</span>
-            <button onclick="adjustTime('minutes', -1)">▼</button>
+            <button id="minutes-down" onclick="adjustTime('minutes', -1)">▼</button>
+        </div>
+        <div class="control-group">
+            <button id="seconds-up" onclick="adjustTime('seconds', 1)">▲</button>
+            <span>Seconds</span>
+            <button id="seconds-down" onclick="adjustTime('seconds', -1)">▼</button>
         </div>
     </div>
+    
+    <button id="reset-button" onclick="resetTimer()">RESET</button>
     
     <script>
         let hours = 0, minutes = 0, seconds = 0;
         let timerRunning = false;
         let timer;
+        let isNegative = false;
 
         function adjustTime(unit, amount) {
-            if (unit === 'hours') {
-                hours = Math.max(0, hours + amount);
-            } else if (unit === 'minutes') {
-                minutes = Math.max(0, minutes + amount);
+            if (!timerRunning) {
+                if (unit === 'hours') {
+                    hours = Math.max(0, hours + amount);
+                } else if (unit === 'minutes') {
+                    minutes = Math.max(0, minutes + amount);
+                } else if (unit === 'seconds') {
+                    seconds = Math.max(0, seconds + amount);
+                }
+                updateDisplay();
             }
-            updateDisplay();
         }
 
         function updateDisplay() {
-            document.getElementById("hours").textContent = String(hours).padStart(2, '0');
-            document.getElementById("minutes").textContent = String(minutes).padStart(2, '0');
-            document.getElementById("seconds").textContent = String(seconds).padStart(2, '0');
+            const timerDisplay = document.querySelector('.timer-container');
+            document.getElementById("sign").textContent = isNegative ? "-" : "";
+            document.getElementById("hours").textContent = String(Math.abs(hours)).padStart(2, '0');
+            document.getElementById("minutes").textContent = String(Math.abs(minutes)).padStart(2, '0');
+            document.getElementById("seconds").textContent = String(Math.abs(seconds)).padStart(2, '0');
+            
+            if (isNegative) {
+                timerDisplay.classList.add("negative");
+            } else {
+                timerDisplay.classList.remove("negative");
+            }
         }
 
-        function startTimer() {
-            if (!timerRunning) {
+        function startStopTimer() {
+            if (timerRunning) {
+                clearInterval(timer);
+                timerRunning = false;
+            } else {
                 timerRunning = true;
                 timer = setInterval(() => {
                     if (hours === 0 && minutes === 0 && seconds === 0) {
-                        seconds = -1; // Start going negative
-                    } else {
+                        isNegative = true;
+                    }
+                    
+                    if (!isNegative) {
                         if (seconds === 0) {
                             if (minutes === 0) {
-                                if (hours > 0) {
+                                if (hours === 0) {
+                                    isNegative = true;
+                                    seconds = -1;
+                                } else {
                                     hours--;
                                     minutes = 59;
                                     seconds = 59;
@@ -92,16 +151,38 @@
                         } else {
                             seconds--;
                         }
+                    } else {
+                        seconds--;
+                        if (seconds < -59) {
+                            seconds = 0;
+                            minutes--;
+                        }
+                        if (minutes < -59) {
+                            minutes = 0;
+                            hours--;
+                        }
                     }
                     updateDisplay();
                 }, 1000);
             }
         }
 
+        function resetTimer() {
+            if (timerRunning) {
+                clearInterval(timer);
+                timerRunning = false;
+            }
+            hours = 0;
+            minutes = 0;
+            seconds = 0;
+            isNegative = false;
+            updateDisplay();
+        }
+
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space") {
                 event.preventDefault();
-                startTimer();
+                startStopTimer();
             }
         });
 
